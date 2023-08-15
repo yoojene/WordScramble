@@ -17,6 +17,8 @@ struct ContentView: View {
     @State private var errorMessage = ""
     @State private var showingError = false
     
+    @State private var score = 0
+    
     var body: some View {
         
         NavigationView {
@@ -35,8 +37,15 @@ struct ContentView: View {
                         
                     }
                 }
+                
+                Section {
+                    Text("Current score is \(score)")
+                }
             }
             .navigationTitle(rootWord)
+            .toolbar { // Day 31 Challenge 2
+                Button("Start Game", action: startGame)
+            }
             .onSubmit {
                 addNewWord()
             }
@@ -53,9 +62,16 @@ struct ContentView: View {
     
     func addNewWord() {
         let answer = newWord.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        guard answer.count > 0 else { return }
+        
         
         // Validations
+        
+        // Word must have at least 3 char - Day 31 challenge 1
+        
+        guard answer.count > 2 else {
+            wordError(title: "Word not long enough", message: "It must have at least 3 letters")
+            return
+        }
         
         guard isOriginal(word: answer) else {
             wordError(title: "Word already used", message: "Be more original!")
@@ -74,12 +90,22 @@ struct ContentView: View {
         
         withAnimation {
             usedWords.insert(answer, at: 0)
+            score += 1
+            score += answer.count
+            if answer.count == rootWord.count {
+                score += 10 // extra points for anagram
+            }
         }
         newWord = ""
         
     }
     
     func startGame() {
+        
+        // Reset game variables
+        score = 0
+        usedWords = []
+        
         if let startWordsURL = Bundle.main.url(forResource: "start",  withExtension: "txt") {
             if let startWords = try? String(contentsOf: startWordsURL) {
                 // loaded file!
